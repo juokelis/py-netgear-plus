@@ -18,6 +18,7 @@ from .fetcher import (
     status_code_not_found,
     status_code_unauthorized,
 )
+from .firmware import get_latest_firmware_info
 from .models import (
     MODELS,
     AutodetectedSwitchModel,
@@ -449,6 +450,20 @@ class NetgearSwitchConnector:
         self._previous_data = current_data
 
         return switch_data
+
+    def get_firmware_update_info(
+        self, installed_version: str | None = None
+    ) -> dict[str, Any]:
+        """Return firmware release information for the current switch model."""
+        if not self.switch_model.MODEL_NAME:
+            self.autodetect_model()
+
+        if installed_version is None:
+            installed_version = self._loaded_switch_metadata.get("switch_firmware")
+            if installed_version is None:
+                installed_version = self.get_switch_infos().get("switch_firmware")
+
+        return get_latest_firmware_info(self.switch_model.MODEL_NAME, installed_version)
 
     def _get_switch_metadata(self) -> None:
         if not self.switch_model:
